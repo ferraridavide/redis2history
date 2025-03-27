@@ -1,0 +1,10 @@
+plugins/plugin_eng.py
+plugins/plugin_ita.py
+plugins/plugin_rng.py
+.vscode/
+.idea/
+plugins/plugin_redis.py
+__pycache__/
+plugins/__pycache__/
+dumps/
+todos/

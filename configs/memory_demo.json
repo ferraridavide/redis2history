@@ -1,0 +1,67 @@
+{
+    "global":{
+      "start":"-inf",
+      "end":"+inf"
+    },
+    "redis": {
+      "host": "siak-redis1",
+      "port": 6379,
+      "tls": false,
+      "cluster": false
+    },
+    "mongo": {
+      "host": "siak-mongo1",
+      "port": 27017,
+      "tls": false
+    },
+    "pipelines":[
+      {
+        "id": "pipe1",
+        "parallel": false,
+        "stages": [
+          {
+            "id": "gen",
+            "script":"plugins.debug_dataGenerator"
+          },
+          {
+            "id": "edit1",
+            "script":"plugins.debug_edit"
+          },
+          {
+            "id": "edit2",
+            "script":"plugins.debug_edit"
+          }
+        ]
+      },
+      {
+        "id": "pipe2",
+        "parallel": false,
+        "source": "pipe1",
+        "stages": [
+          {
+            "id": "edit3",
+            "script":"plugins.debug_edit"
+          },
+          {
+            "id": "gen2",
+            "script":"plugins.debug_dataGenerator"
+          }
+        ]
+      },
+      {
+        "id": "pipe3",
+        "parallel": false,
+        "source": "pipe2",
+        "stages": [
+          {
+            "id": "edit4",
+            "script":"plugins.debug_edit"
+          }
+        ]
+      }
+    ]
+  }
+
+
+
+  

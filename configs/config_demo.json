@@ -1,0 +1,62 @@
+{
+    "redis": {
+      "host": "locahost",
+      "port": 6379,
+      "tls": false,
+      "cluster": false,
+      "entities": [
+        {
+          "id": "drivers",
+          "pattern": "trucklink:drivers-hs:*"
+        },
+        {
+            "id": "vehicles",
+            "pattern": "trucklink:vehicles-hs:*"
+          }
+      ]
+    },
+    "mongo": {
+      "host": "locahost",
+      "port": 6379,
+      "tls": false,
+      "entities": [
+        {
+          "id": "historyDrivers",
+          "database": "trucklink",
+          "collection": "historyDrivers"
+        }
+      ]
+    },
+    "transforms": [
+      {
+        "id": "redisVehicles",
+        "script":"plugins.redis_scan",
+        "args": {
+          "key_pattern": "trucklink:vehicles-hs:*"
+        }
+      },
+      {
+        "id": "rng",
+        "script":"plugins.plugin_rng",
+        "args":{
+          "minValue": 1,
+          "maxValue": 5
+        }
+      },
+      {
+        "id": "ita2",
+        "script":"plugins.plugin_ita",
+        "source": "rng"
+      },
+      {
+        "id": "ita",
+        "script":"plugins.plugin_ita",
+        "source": "rng"
+      },
+      {
+        "id": "eng",
+        "script":"plugins.plugin_eng",
+        "source": "ita"
+      }
+    ]
+  }

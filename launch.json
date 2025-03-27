@@ -1,0 +1,52 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "zrange",
+            "type": "python",
+            "request": "launch",
+            "args": ["--args","start=-inf","end=+inf","--config",".\\config_no_mongo.json","--input",".\\plugins\\WorkerRedisScan_20230502_122007.pickle"],
+            "program": "${workspaceFolder}/plugins/redis_zrange.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "parseVehicles",
+            "type": "python",
+            "request": "launch",
+            "args": ["--config",".\\config_no_mongo.json","--input",".\\plugins\\WorkerRedisZRange_20230502_132912.pickle"],
+            "program": "${workspaceFolder}/plugins/trucklink_parseVehicles.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "drivers_downsampling",
+            "type": "python",
+            "request": "launch",
+            "args": ["--a","interval=60","-c","./configs/config_analyzer_demo.json","-i","./dumps/drivers.pickle","-iter","true"],
+            "program": "${workspaceFolder}/plugins/driver_downsampling.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "getVehicleDrivers",
+            "type": "python",
+            "request": "launch",
+            "args": ["--args","start=-inf","end=+inf","--config",".\\config_no_mongo.json","--input",".\\plugins\\WorkerTrucklinkParseVehicles_20230502_133334.pickle"],
+            "program": "${workspaceFolder}/plugins/trucklink_getVehicleDrivers.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "main",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        }
+    ]
+}

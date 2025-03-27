@@ -1,0 +1,16 @@
+version: "3.5"
+
+services:
+  redis:
+    image: "redis:6.0-alpine"
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis:/data
+    command: ["/data/redis.conf"]
+  mongo:
+    image: "mongo:4.2.10"
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongodb:/data/db

@@ -1,0 +1,142 @@
+{
+    "global":{
+      "start":"-inf",
+      "end":"+inf"
+    },
+    "redis": {
+      "host": "siak-redis1",
+      "port": 6379,
+      "tls": false,
+      "cluster": false,
+      "lock": "trucklink:redis2history_lock"
+    },
+    "mongo": {
+      "host": "siak-mongo1",
+      "port": 27017,
+      "tls": false
+    },
+    "notUsed": [
+      {
+        "id": "removeRedisVehicles",
+        "bulkSource": true,
+        "stages": [
+          {
+            "id": "removeRedisVehicles",
+            "script":"plugins.redis_removehistory",
+            "source": "fetchVehicles"
+          }
+        ]
+      },
+      {
+        "id": "removeRedisDrivers",
+        "bulkSource": true,
+        "stages": [
+          {
+            "id": "removeRedisDrivers",
+            "script":"plugins.redis_removehistorydriver",
+            "source": "fetchDrivers"
+          }
+        ]
+      }
+    ],
+    "pipelines":[
+      {
+        "id": "fetchVehicles",
+        "parallel": false,
+        "stages": [
+          {
+            "id": "redisVehiclesKeys",
+            "script":"plugins.redis_scan",
+            "args": {
+              "key_pattern": "trucklink:vehicles-hs:*"
+            }
+          },
+          {
+            "id": "redisVehicles",
+            "script":"plugins.redis_zrange"
+          },
+          {
+            "id": "parseVehicles",
+            "script":"plugins.trucklink_parseVehicles"
+          }
+        ]
+      },
+      {
+        "id": "fetchDrivers",
+        "parallel": false,
+        "source": "fetchVehicles",
+        "stages": [
+          {
+            "id": "getVehicleDrivers",
+            "script":"plugins.trucklink_getVehicleDrivers"
+          }
+        ]
+      },
+      {
+        "id": "downsampleVehicle",
+        "parallel": false,
+        "source": "fetchVehicles",
+        "stages": [
+          {
+            "id": "vehicleDownsampling",
+            "script":"plugins.vehicle_downsampling",
+            "workers": 4,
+            "args": {
+              "interval": "60"
+            }
+          }
+        ]
+      },
+      {
+        "id": "downsampleDrivers",
+        "parallel": false,
+        "source": "fetchDrivers",
+        "stages": [
+          {
+            "id": "driverDownsampling",
+            "script":"plugins.drivers_downsampling",
+            "workers": 4,
+            "args": {
+              "interval": "60"
+            }
+          }
+        ]
+      },
+      {
+        "id": "upsertDrivers",
+        "bulkSource": true,
+        "source": "fetchDrivers",
+        "stages": [
+          {
+            "id": "upsertDrivers",
+            "script":"plugins.mongo_upsert",
+            "args": {
+              "database": "trucklink_new",
+              "collection": "historyDrivers",
+              "num_bulkwrite": 30
+            }
+          }
+        ]
+      },
+      {
+        "id": "upsertVehicles",
+        "bulkSource": true,
+        "source": "downsampleVehicle",
+        "stages": [
+          {
+            "id": "upsertVehicles",
+            "script":"plugins.mongo_upsertVehicles",
+            "args": {
+              "database": "trucklink_new",
+              "collection": "historyVehicles",
+              "num_bulkwrite": 30
+            }
+          }
+        ]
+      }
+    ]
+  }
+
+
+
+  

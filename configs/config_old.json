@@ -1,0 +1,116 @@
+{
+    "global":{
+      "start":"-inf",
+      "end":"+inf"
+    },
+    "redis": {
+      "host": "localhost",
+      "port": 6379,
+      "tls": false,
+      "cluster": false
+    },
+    "mongo": {
+      "host": "localhost",
+      "port": 27017,
+      "tls": false
+    },
+    "transforms": [
+      {
+        "id": "redisVehiclesKeys",
+        "script":"plugins.redis_scan",
+        "args": {
+          "key_pattern": "trucklink:vehicles-hs:*"
+        }
+      },
+      {
+        "id": "redisVehicles",
+        "script":"plugins.redis_zrange",
+        "source":"redisVehiclesKeys"
+      },
+      {
+        "id": "parseVehicles",
+        "script":"plugins.trucklink_parseVehicles",
+        "source":"redisVehicles"
+      },
+      {
+        "id": "getVehicleDrivers",
+        "script":"plugins.trucklink_getVehicleDrivers",
+        "source":"parseVehicles"
+      }
+    ],
+    "pipelines":[
+      {
+        "id": "pipe1",
+        "source": null,
+        "stages": [
+          {
+            "id": "redisVehiclesKeys",
+            "script":"plugins.redis_scan",
+            "args": {
+              "key_pattern": "trucklink:vehicles-hs:*"
+            }
+          }
+        ]
+      },
+      {
+        "id": "pipe2",
+        "source": "pipe1",
+        "stages": [
+          {
+            "id": "redisVehicles",
+            "script":"plugins.redis_zrange",
+            "source":"pipe1"
+          },
+          {
+            "id": "parseVehicles",
+            "script":"plugins.trucklink_parseVehicles",
+            "source":"redisVehicles"
+          }
+        ]
+      },
+      {
+        "id": "pipe3",
+        "source": "pipe2",
+        "stages": [
+          {
+            "id": "getVehicleDrivers",
+            "script":"plugins.trucklink_getVehicleDrivers",
+            "source": "pipe2",
+            "workers": 4
+          }
+        ]
+      },
+      {
+        "id": "pipe4",
+        "source": "pipe3",
+        "stages": [
+          {
+            "id": "upsertDrivers",
+            "script":"plugins.mongo_upsert",
+            "source": "pipe3",
+            "args": {
+              "database": "trucklink_new",
+              "collection": "historyDrivers",
+              "num_bulkwrite": 30
+            }
+          }
+        ]
+      },
+      {
+        "id": "pipe5",
+        "source": "pipe2",
+        "stages": [
+          {
+            "id": "upsertVehicles",
+            "script":"plugins.mongo_upsertVehicles",
+            "source": "pipe2",
+            "args": {
+              "database": "trucklink_new",
+              "collection": "historyVehicles",
+              "num_bulkwrite": 30
+            }
+          }
+        ]
+      }
+    ]
+  }
